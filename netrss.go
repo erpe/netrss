@@ -2,7 +2,7 @@ package netrss
 
 import (
 	"encoding/xml"
-	"fmt"
+	//"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -33,7 +33,7 @@ type NetRss struct {
 	Address string
 	Feed    []byte
 	fetched bool
-	url     net.Url
+	url     url.URL
 }
 
 func (nr *NetRss) fetchSourceFeed() bool {
@@ -48,25 +48,25 @@ func (nr *NetRss) fetchSourceFeed() bool {
 		log.Println(err)
 		return false
 	}
-	np.Feed = body
+	nr.Feed = body
 	return true
 }
 
-func (np *NetRss) ParseFeedContent() (Rss2, bool) {
+func (nr *NetRss) ParseFeedContent() (Rss2, bool) {
 	v := Rss2{}
-	if np.Address == nil {
+	if nr.Address == "" {
 		log.Println("Missing address...")
-		panic
+		return v, false
 	}
-	if np.fetched == true {
-		err := xml.Unmarshal(np.Feed, &v)
+	if nr.fetched == true {
+		err := xml.Unmarshal(nr.Feed, &v)
 		if err != nil {
 			log.Println(err)
 		}
 	} else {
-		np.fetchSourceFeed()
-		np.fetched = true
-		err := xml.Unmarshal(np.Feed, &v)
+		nr.fetchSourceFeed()
+		nr.fetched = true
+		err := xml.Unmarshal(nr.Feed, &v)
 		if err != nil {
 			log.Println(err)
 		}
