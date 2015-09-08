@@ -85,14 +85,20 @@ func (np *NetRss) ParseFeedContent() (Rss2, bool) {
 	return v, false
 }
 
-func main() {
-	np := Netzpolitik{}
-	rss2, b := np.ParseFeedContent()
-	if b == false {
-		log.Println("parseFeedContent returned false...")
-	}
-
-	for _, e := range rss2.ItemList {
-		fmt.Println(e.Title)
-	}
-}
+/*
+/*	import (
+/*		"github.com/erpe/netrss"
+/*		"encoding/xml"
+/*	)
+/*
+/*	func main() {
+/*		np := NetRss{ Address: 'https://netzpolitik.org/rss' }
+/*		rss2, b := np.ParseFeedContent()
+/*		if b == false {
+/*			log.Println("parseFeedContent returned false...")
+/*		}
+/*		for _, e := range rss2.ItemList {
+/*			fmt.Println(e.Title)
+/*		}
+/*	}
+*/
