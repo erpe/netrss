@@ -1,12 +1,12 @@
+// package to ease fetching/parsing of rss-feeds
 package netrss
 
 import (
 	"encoding/xml"
+	"golang.org/x/net/html/charset"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 )
 
 type Rss2 struct {
@@ -30,25 +30,6 @@ type Item struct {
 
 type NetRss struct {
 	Address string
-	Feed    []byte
-	fetched bool
-	url     url.URL
-}
-
-func (nr *NetRss) fetchSourceFeed() bool {
-	resp, err := http.Get(nr.Address)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	nr.Feed = body
-	return true
 }
 
 func (nr *NetRss) ParseFeedContent() (Rss2, bool) {
@@ -56,16 +37,27 @@ func (nr *NetRss) ParseFeedContent() (Rss2, bool) {
 
 	if nr.Address == "" {
 		log.Println("Missing address...")
-		return v, false
+		panic("Missing Address")
 	}
 
-	if nr.fetched == false {
-		nr.fetchSourceFeed()
-		nr.fetched = true
+	resp, err := http.Get(nr.Address)
+	if err != nil {
+		log.Println(err)
+		panic(err)
 	}
 
-	// TODO: need a decoder in case of wrong charset
-	err := xml.Unmarshal(nr.Feed, &v)
+	// because we dunno respons' charset
+	// we convert in advance
+	decoder := xml.NewDecoder(resp.Body)
+	decoder.CharsetReader = charset.NewReaderLabel
+	err = decoder.Decode(&v)
+
+	if err != nil {
+		log.Println(err)
+		panic(err)
+	}
+
+	defer resp.Body.Close()
 
 	if err != nil {
 		log.Println(err)
@@ -84,19 +76,19 @@ func (nr *NetRss) ParseFeedContent() (Rss2, bool) {
 }
 
 /*
-/*	import (
-/*		"github.com/erpe/netrss"
-/*		"encoding/xml"
-/*	)
-/*
-/*	func main() {
-/*		np := netrss.NetRss{ Address: 'https://netzpolitik.org/rss' }
-/*		rss2, b := np.ParseFeedContent()
-/*		if b == false {
-/*			log.Println("parseFeedContent returned false...")
-/*		}
-/*		for _, e := range rss2.ItemList {
-/*			fmt.Println(e.Title)
-/*		}
-/*	}
+//	import (
+//		"github.com/erpe/netrss"
+//		"encoding/xml"
+//	)
+//
+//	func main() {
+//		np := netrss.NetRss{ Address: 'https://netzpolitik.org/rss' }
+//		rss2, b := np.ParseFeedContent()
+//		if b == false {
+//			log.Println("parseFeedContent returned false...")
+//		}
+//		for _, e := range rss2.ItemList {
+//			fmt.Println(e.Title)
+//		}
+//	}
 */
