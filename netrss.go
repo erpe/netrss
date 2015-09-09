@@ -2,7 +2,6 @@ package netrss
 
 import (
 	"encoding/xml"
-	//"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -54,26 +53,25 @@ func (nr *NetRss) fetchSourceFeed() bool {
 
 func (nr *NetRss) ParseFeedContent() (Rss2, bool) {
 	v := Rss2{}
+
 	if nr.Address == "" {
 		log.Println("Missing address...")
 		return v, false
 	}
-	if nr.fetched == true {
-		err := xml.Unmarshal(nr.Feed, &v)
-		if err != nil {
-			log.Println(err)
-		}
-	} else {
+
+	if nr.fetched == false {
 		nr.fetchSourceFeed()
 		nr.fetched = true
-		err := xml.Unmarshal(nr.Feed, &v)
-		if err != nil {
-			log.Println(err)
-		}
+	}
+
+	// TODO: need a decoder in case of wrong charset
+	err := xml.Unmarshal(nr.Feed, &v)
+
+	if err != nil {
+		log.Println(err)
 	}
 
 	if v.Version == "2.0" {
-		// RSS 2.0
 		for i, _ := range v.ItemList {
 			if v.ItemList[i].Content != "" {
 				v.ItemList[i].Description = v.ItemList[i].Content
@@ -92,7 +90,7 @@ func (nr *NetRss) ParseFeedContent() (Rss2, bool) {
 /*	)
 /*
 /*	func main() {
-/*		np := NetRss{ Address: 'https://netzpolitik.org/rss' }
+/*		np := netrss.NetRss{ Address: 'https://netzpolitik.org/rss' }
 /*		rss2, b := np.ParseFeedContent()
 /*		if b == false {
 /*			log.Println("parseFeedContent returned false...")
